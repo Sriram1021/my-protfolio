@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import {
   Code2, Palette, Atom, Smartphone, Box,
@@ -69,7 +69,6 @@ const SKILLS = [
 
 const SkillsPage = memo(() => {
   const [selectedSkill, setSelectedSkill] = useState(SKILLS[0]);
-  const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
   
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -77,12 +76,27 @@ const SkillsPage = memo(() => {
   const transformedMouseY = useTransform(mouseY, (val) => val - 250);
 
   useEffect(() => {
+    // requestAnimationFrame throttling: store latest coords and flush once per RAF
+    const latest = { x: 0, y: 0 };
+    const rafId = { id: 0 } as { id: number };
+
     const handleMouseMove = (e: MouseEvent) => {
-      mouseX.set(e.clientX);
-      mouseY.set(e.clientY);
+      latest.x = e.clientX;
+      latest.y = e.clientY;
+      if (!rafId.id) {
+        rafId.id = requestAnimationFrame(() => {
+          mouseX.set(latest.x);
+          mouseY.set(latest.y);
+          rafId.id = 0;
+        });
+      }
     };
+
     window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (rafId.id) cancelAnimationFrame(rafId.id);
+    };
   }, [mouseX, mouseY]);
 
   return (
@@ -95,13 +109,14 @@ const SkillsPage = memo(() => {
             className="absolute w-[500px] h-[500px] rounded-full"
             style={{
               background: 'radial-gradient(circle, rgba(99, 102, 241, 0.08), transparent 70%)',
-              filter: 'blur(60px)',
+              // reduced blur intensity for better performance
+              filter: 'blur(30px)',
               x: transformedMouseX,
               y: transformedMouseY,
             }}
           />
-          <div className="absolute top-20 -left-20 w-80 h-80 rounded-full bg-gradient-to-br from-blue-200/30 to-cyan-200/30 blur-3xl" />
-          <div className="absolute bottom-20 -right-20 w-80 h-80 rounded-full bg-gradient-to-br from-purple-200/30 to-pink-200/30 blur-3xl" />
+          <div className="absolute top-20 -left-20 w-80 h-80 rounded-full bg-gradient-to-br from-blue-200/30 to-cyan-200/30 blur-xl" />
+          <div className="absolute bottom-20 -right-20 w-80 h-80 rounded-full bg-gradient-to-br from-purple-200/30 to-pink-200/30 blur-xl" />
         </div>
 
         <motion.div
@@ -147,29 +162,34 @@ const SkillsPage = memo(() => {
             <div className="relative w-full h-full flex items-center justify-center p-4">
               <svg className="absolute inset-0 w-full h-full">
                 {/* SIZE: Reduced orbit radii to bring skills closer */}
-                <circle cx="50%" cy="50%" r="110" fill="none" stroke="url(#orbit1)" strokeWidth="1" strokeDasharray="4 8" className="animate-[spin_60s_linear_infinite]" />
-                <circle cx="50%" cy="50%" r="180" fill="none" stroke="url(#orbit2)" strokeWidth="1" strokeDasharray="8 8" className="animate-[spin_90s_linear_infinite_reverse]" />
+                <circle cx="50%" cy="50%" r="110" fill="none" stroke="url(#orbit1)" strokeWidth="1" strokeDasharray="4 8" className="animate-orbit-slow" />
+                <circle cx="50%" cy="50%" r="180" fill="none" stroke="url(#orbit2)" strokeWidth="1" strokeDasharray="8 8" className="animate-orbit-slower" />
                 <defs><linearGradient id="orbit1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#3B82F6" stopOpacity="0.2" /><stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.2" /></linearGradient><linearGradient id="orbit2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.1" /><stop offset="100%" stopColor="#EC4899" stopOpacity="0.1" /></linearGradient></defs>
               </svg>
 
-              <div className="relative w-full h-full animate-[spin_200s_linear_infinite] will-change-transform">
+              <div className="relative w-full h-full animate-orbit-very-slow will-change-transform">
                 {SKILLS.map((skill) => (
                   <div key={skill.id} className="absolute" style={{ top: skill.position.top, left: skill.position.left, transform: 'translate(-50%, -50%)' }}>
-                    <div className="animate-[spin_200s_linear_infinite_reverse] will-change-transform">
+                    <div className="animate-counter-orbit-very-slow will-change-transform">
                       <motion.button
                         // SIZE: Reduced skill button sizes
                         className={`relative group/skill flex flex-col items-center justify-center rounded-xl cursor-pointer ${
                           skill.id === 'react' ? 'w-16 h-16 p-2.5' : 'w-14 h-14 p-2'
                         }`}
-                        style={{ background: hoveredSkill === skill.id || selectedSkill.id === skill.id ? `linear-gradient(135deg, ${skill.color}15 0%, ${skill.color}05 100%)` : 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)', boxShadow: hoveredSkill === skill.id || selectedSkill.id === skill.id ? `0 6px 20px ${skill.color}30, inset 0 0 0 1.5px ${skill.color}50` : 'inset 0 0 0 1px rgba(255,255,255,0.5)' }}
+                        // visual hover handled by child overlay (CSS/Framer) to avoid React re-renders
+                        style={{
+                          background: selectedSkill.id === skill.id ? `linear-gradient(135deg, ${skill.color}15 0%, ${skill.color}05 100%)` : 'rgba(255,255,255,0.7)',
+                          backdropFilter: 'blur(10px)',
+                          boxShadow: selectedSkill.id === skill.id ? `0 6px 20px ${skill.color}30, inset 0 0 0 1.5px ${skill.color}50` : 'inset 0 0 0 1px rgba(255,255,255,0.5)'
+                        }}
                         whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
-                        onHoverStart={() => setHoveredSkill(skill.id)} onHoverEnd={() => setHoveredSkill(null)}
                         onClick={() => setSelectedSkill(skill)}
                       >
                         <div className="relative z-10" style={{ color: skill.color }}>{skill.icon}</div>
                         <span className="text-[10px] font-medium mt-1 text-slate-700">{skill.name}</span>
-                        {(hoveredSkill === skill.id || selectedSkill.id === skill.id) && (<motion.div className="absolute inset-0 rounded-xl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: `radial-gradient(circle at center, ${skill.color}20, transparent 70%)`, filter: 'blur(15px)' }}/>)}
-                        {selectedSkill.id === skill.id && (<motion.div className="absolute inset-0 rounded-xl pointer-events-none" style={{ border: `2px solid ${skill.color}` }} animate={{ scale: [1, 1.3], opacity: [0.5, 0] }} transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}/>)}
+                        {/* Hover overlay handled with Framer Motion inside button (no React state updates) */}
+                        <motion.div className="absolute inset-0 rounded-xl pointer-events-none" initial={{ opacity: 0 }} whileHover={{ opacity: 1 }} transition={{ duration: 0.18 }} style={{ background: `radial-gradient(circle at center, ${skill.color}20, transparent 70%)`, filter: 'blur(8px)' }} />
+                        {selectedSkill.id === skill.id && (<div className="absolute inset-0 rounded-xl pointer-events-none animate-pulse-ring" style={{ ['--pulse-color' as any]: `${skill.color}20`, border: `2px solid ${skill.color}` }} />)}
                       </motion.button>
                     </div>
                   </div>

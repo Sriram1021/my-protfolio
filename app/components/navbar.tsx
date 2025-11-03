@@ -2,7 +2,7 @@
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { FiMenu, FiX } from 'react-icons/fi';
 import { Github, Linkedin, ExternalLink } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import type { Icon } from 'lucide-react';
 
 // --- Type Definitions ---
@@ -15,44 +15,52 @@ interface NavLink {
 interface SocialLink {
   name: string;
   href: string;
-  Icon: Icon;
+  Icon: React.ElementType;
   isExternal: boolean;
 }
 
-// Water Bubbles Animation Component with enhanced visibility
-const WaterBubbles = ({ isActive = false, isHovered = false }) => {
-  const [bubbles, setBubbles] = useState<Array<{ id: number, x: number, y: number, size: number, delay: number, duration: number }>>([]);
-  
-  // Generate random bubbles when active or hovered
-  useEffect(() => {
-    if (isActive || isHovered) {
-      // Clear any existing bubbles first
-      setBubbles([]);
-      
-      // Create more bubbles with larger sizes for better visibility
-      const newBubbles = Array.from({ length: isActive ? 20 : 15 }, (_, i) => ({
-        id: i,
-        x: Math.random() * 100, // random x position in %
-        y: 80 + Math.random() * 20, // start from bottom
-        size: Math.random() * 8 + 6, // random size between 6-14px (increased)
-        delay: Math.random() * 2, // random start delay
-        duration: Math.random() * 2 + 2 // random animation duration
-      }));
-      
-      setBubbles(newBubbles);
-    } else {
-      setBubbles([]);
-    }
+// --- Constants (outside component for better performance) ---
+const NAV_LINKS: NavLink[] = [
+  { id: 'about', name: 'About', href: '#about' },
+  { id: 'skills', name: 'Skills', href: '#skills' },
+  { id: 'projects', name: 'Projects', href: '#projects' },
+  { id: 'contact', name: 'Contact', href: '#contact' },
+];
+
+const SOCIAL_LINKS: SocialLink[] = [
+  { name: 'GitHub', href: 'https://github.com/Sriram1021', Icon: Github, isExternal: true },
+  { name: 'LinkedIn', href: 'https://www.linkedin.com/in/sriram1021/', Icon: Linkedin, isExternal: true },
+];
+
+// Memoized Water Bubbles Animation Component with reduced bubble count
+interface WaterBubblesProps {
+  isActive?: boolean;
+  isHovered?: boolean;
+}
+
+const WaterBubbles = memo(({ isActive = false, isHovered = false }: WaterBubblesProps) => {
+
+  const bubbles = useMemo(() => {
+    if (!isActive && !isHovered) return [];
+    
+    // Reduced bubble count for better performance
+    const count = isActive ? 12 : 8;
+    return Array.from({ length: count }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: 80 + Math.random() * 20,
+      size: Math.random() * 8 + 6,
+      delay: Math.random() * 2,
+      duration: Math.random() * 2 + 2
+    }));
   }, [isActive, isHovered]);
   
   if (!isActive && !isHovered) return null;
   
   return (
     <div className="absolute inset-0 overflow-hidden rounded-full pointer-events-none">
-      {/* Water gradient background - more vibrant */}
       <div className="absolute inset-0 bg-gradient-to-b from-blue-300/70 to-cyan-200/90"></div>
       
-      {/* Animated bubbles - more visible */}
       {bubbles.map(bubble => (
         <motion.div
           key={bubble.id}
@@ -81,16 +89,15 @@ const WaterBubbles = ({ isActive = false, isHovered = false }) => {
         />
       ))}
       
-      {/* Enhanced wave effect at the bottom */}
       <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-t from-blue-300/60 to-transparent"></div>
-      
-      {/* Additional water surface shimmer effect */}
       <div className="absolute inset-x-0 top-0 h-[30%] bg-gradient-to-b from-white/40 to-transparent"></div>
     </div>
   );
-};
+});
 
-// Custom Bubble Hover Effect Component with Water Effect
+WaterBubbles.displayName = 'WaterBubbles';
+
+// Memoized BubbleHover component
 interface BubbleProps {
   children: React.ReactNode;
   className?: string;
@@ -100,8 +107,7 @@ interface BubbleProps {
   isActive?: boolean;
 }
 
-// --- Enhanced BubbleHover component with water effect ---
-const BubbleHover: React.FC<BubbleProps> = ({
+const BubbleHover = memo<BubbleProps>(({
   children,
   className = "",
   onClick,
@@ -115,12 +121,12 @@ const BubbleHover: React.FC<BubbleProps> = ({
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!ref.current) return;
     const rect = ref.current.getBoundingClientRect();
     mouseX.set(e.clientX - rect.left);
     mouseY.set(e.clientY - rect.top);
-  };
+  }, [mouseX, mouseY]);
   
   const bubbleX = useTransform(mouseX, (val) => val - bubbleSize / 2);
   const bubbleY = useTransform(mouseY, (val) => val - bubbleSize / 2);
@@ -134,7 +140,6 @@ const BubbleHover: React.FC<BubbleProps> = ({
       onMouseMove={handleMouseMove}
       onClick={onClick}
     >
-      {/* Water Bubble Effect on Hover - Same as active */}
       <AnimatePresence>
         {(isHovered || isActive) && (
           <motion.div
@@ -149,7 +154,6 @@ const BubbleHover: React.FC<BubbleProps> = ({
         )}
       </AnimatePresence>
       
-      {/* Original bubble hover effect */}
       <AnimatePresence>
         {isHovered && !isActive && (
           <motion.div
@@ -167,8 +171,8 @@ const BubbleHover: React.FC<BubbleProps> = ({
             exit={{ scale: 0, opacity: 0 }}
             transition={{
               type: "spring",
-              stiffness: 250,
-              damping: 25,
+              stiffness: 200, // Reduced from 250
+              damping: 20,    // Reduced from 25
               mass: 0.5
             }}
           />
@@ -177,21 +181,18 @@ const BubbleHover: React.FC<BubbleProps> = ({
       <div className="relative z-10">{children}</div>
     </motion.div>
   );
-};
+});
 
-// --- Customizable Constants ---
-const NAV_LINKS: NavLink[] = [
-  { id: 'about', name: 'About', href: '#about' },
-  { id: 'skills', name: 'Skills', href: '#skills' },
-  { id: 'projects', name: 'Projects', href: '#projects' },
-  { id: 'contact', name: 'Contact', href: '#contact' },
-];
+BubbleHover.displayName = 'BubbleHover';
 
-const SOCIAL_LINKS: SocialLink[] = [
-  { name: 'GitHub', href: 'https://github.com/Sriram1021', Icon: Github, isExternal: true },
-  { name: 'LinkedIn', href: 'https://www.linkedin.com/in/sriram1021/', Icon: Linkedin, isExternal: true },
-  // Email icon removed as requested
-];
+// Utility function for debouncing
+function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
+  let timeout: NodeJS.Timeout;
+  return ((...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  }) as T;
+}
 
 function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -201,116 +202,113 @@ function Navbar() {
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
 
-  // Effect for shrinking navbar on scroll
+  // Debounced scroll handler for better performance
   useEffect(() => {
-    const handleScroll = () => {
+    const handleScroll = debounce(() => {
       setIsScrolled(window.scrollY > 10);
-    };
+    }, 10);
+
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // Set initial state on mount
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Effect for active section highlighting using IntersectionObserver
+  // Optimized IntersectionObserver
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
-        });
-      },
-      {
-        // The section is considered "active" when it's in the middle 20% of the screen.
-        rootMargin: '-40% 0px -40% 0px',
-      }
-    );
+    const observerOptions = {
+      rootMargin: '-40% 0px -40% 0px',
+      threshold: 0
+    };
 
-    const sections = NAV_LINKS.map((link) => document.getElementById(link.id));
-    sections.forEach((section) => {
-      if (section) {
-        observer.observe(section);
-      }
-    });
-
-    return () => {
-      sections.forEach((section) => {
-        if (section) {
-          observer.unobserve(section);
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
         }
       });
-    };
-  }, []); 
+    }, observerOptions);
 
-  // Close mobile menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (headerRef.current && !headerRef.current.contains(event.target as Node) && mobileMenuOpen) {
-        setMobileMenuOpen(false);
-      }
-    };
+    const sections = NAV_LINKS.map((link) => document.getElementById(link.id)).filter(Boolean);
+    sections.forEach((section) => observer.observe(section!));
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      sections.forEach((section) => observer.unobserve(section!));
+    };
+  }, []);
+
+  // Memoized click handlers
+  const handleClickOutside = useCallback((event: MouseEvent) => {
+    if (headerRef.current && !headerRef.current.contains(event.target as Node) && mobileMenuOpen) {
+      setMobileMenuOpen(false);
+    }
   }, [mobileMenuOpen]);
 
-  // Scroll to section function
-  const handleLinkClick = (href: string) => {
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [handleClickOutside]);
+
+  const handleLinkClick = useCallback((href: string) => {
     setMobileMenuOpen(false);
     const element = document.querySelector(href);
     if (element) {
-      element.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'start' 
-      });
-      
-      const sectionId = href.replace('#', '');
-      setActiveSection(sectionId);
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setActiveSection(href.replace('#', ''));
     }
-  };
+  }, []);
 
-  // Scroll to top function
-  const handleHomeClick = () => {
+  const handleHomeClick = useCallback(() => {
     setMobileMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setActiveSection('home');
-  };
+  }, []);
 
-  // Animation variants
+  const toggleMobileMenu = useCallback(() => {
+    setMobileMenuOpen(prev => !prev);
+  }, []);
+
+  // Memoized animation variants
   const navVariants = {
-    initial: { y: -100, opacity: 0 },
-    animate: { 
-      y: 0, 
-      opacity: 1,
-      transition: { type: 'spring', damping: 20, stiffness: 100, duration: 0.5 }
-    }
-  };
+  initial: { y: -100, opacity: 0 },
+  animate: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring" as const,
+      damping: 20,
+      stiffness: 100,
+      duration: 0.5,
+    },
+  },
+} as const;
 
-  const mobileMenuVariants = {
+
+  const mobileMenuVariants = useMemo(() => ({
     hidden: { 
       opacity: 0, 
       height: 0,
-      transition: { duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }
+      transition: { duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] as any
+ }
     },
     visible: { 
       opacity: 1, 
       height: 'auto',
-      transition: { duration: 0.5, ease: [0.04, 0.62, 0.23, 0.98] }
+      transition: { duration: 0.5, ease: [0.04, 0.62, 0.23, 0.98] as any
+}
     }
-  };
+  }), []);
 
-  const logoTextVariants = {
+  const logoTextVariants = useMemo(() => ({
     initial: { y: 0, opacity: 1 },
     hover: { y: -20, opacity: 0 },
     exit: { y: 20, opacity: 0 }
-  };
+  }), []);
   
-  const logoEmojiVariants = {
+  const logoEmojiVariants = useMemo(() => ({
     initial: { y: 20, opacity: 0 },
     hover: { y: 0, opacity: 1 },
     exit: { y: -20, opacity: 0 }
-  };
+  }), []);
 
   return (
     <motion.header
@@ -327,7 +325,7 @@ function Navbar() {
           className="rounded-2xl border border-white/20 transition-all duration-500"
           style={{
             backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)', // for Safari support
+            WebkitBackdropFilter: 'blur(16px)',
             boxShadow: isScrolled 
               ? '0 10px 30px -10px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)'
               : '0 4px 15px -8px rgba(0, 0, 0, 0.05)',
@@ -393,7 +391,6 @@ function Navbar() {
                 >
                   {NAV_LINKS.map((item) => (
                     <div key={item.name} className="relative px-0.5">
-                      {/* Active Background with Water Effect - NO LONGER NEEDED */}
                       <BubbleHover
                         onClick={() => handleLinkClick(item.href)}
                         className={`px-5 py-2.5 rounded-full capitalize cursor-pointer text-sm font-medium transition-all duration-300 ${
@@ -457,7 +454,7 @@ function Navbar() {
 
                 <BubbleHover
                   className="md:hidden p-2 rounded-full"
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  onClick={toggleMobileMenu}
                   bubbleSize={60}
                   bubbleColor="rgba(59, 130, 246, 0.15)"
                 >

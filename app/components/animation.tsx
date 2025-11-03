@@ -43,7 +43,8 @@ type AnimatedWrapperProps = {
   variants?: Variants;
   className?: string;
   custom?: number;
-  animate?: boolean;
+  animate?: boolean | string;
+
 };
 
 export const AnimatedContainer = ({ children, className = '', animate = true }: AnimatedWrapperProps) => (
