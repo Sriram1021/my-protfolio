@@ -248,13 +248,26 @@ function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [handleClickOutside]);
 
+  // Fixed scroll to section with proper offset
   const handleLinkClick = useCallback((href: string) => {
     setMobileMenuOpen(false);
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      setActiveSection(href.replace('#', ''));
-    }
+    
+    // Small delay to ensure menu closes first
+    setTimeout(() => {
+      const element = document.querySelector(href);
+      if (element) {
+        const navbarHeight = headerRef.current?.offsetHeight || 80;
+        const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+        const offsetPosition = elementPosition - navbarHeight - 20; // Extra 20px padding
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+        
+        setActiveSection(href.replace('#', ''));
+      }
+    }, 100);
   }, []);
 
   const handleHomeClick = useCallback(() => {

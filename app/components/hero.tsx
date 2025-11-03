@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useRef, useState,useEffect } from 'react';
+import React, { memo, useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, FileText, Download, ExternalLink } from 'lucide-react';
@@ -210,10 +210,10 @@ const CVButtons = () => {
   }, []);
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative w-full sm:w-auto" ref={dropdownRef}>
       {/* Main CV Button */}
       <motion.button
-        className="px-6 py-3 rounded-lg font-medium text-base bg-white text-gray-700 border border-gray-300 shadow-sm hover:bg-gray-50 transition-colors flex items-center gap-2"
+        className="w-full sm:w-auto px-6 py-3 rounded-lg font-medium text-base bg-white text-gray-700 border border-gray-300 shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
         onClick={() => setIsOpen(!isOpen)}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
@@ -234,7 +234,7 @@ const CVButtons = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="absolute mt-2 right-0 w-48 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-20"
+            className="absolute mt-2 left-0 sm:left-auto sm:right-0 w-full sm:w-48 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-20"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -278,27 +278,71 @@ const HomePage: React.FC<HomePageProps> = memo(({ scrollToSection, handleDownloa
   return (
     <motion.section
       id="home"
-      className="min-h-screen flex items-center justify-center pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-white to-blue-50"
+      className="min-h-screen flex items-center justify-center pt-32 md:pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-white to-blue-50"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-12">
+      <div className="w-full max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-8 lg:gap-12">
+          {/* Image Section - First on mobile */}
           <motion.div
-            className="text-center lg:text-left space-y-6"
+            className="relative flex justify-center lg:justify-end order-1 lg:order-2 mb-8 lg:mb-0"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="relative">
+              {/* Simple gradient background */}
+              <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-500 blur-sm opacity-20"></div>
+              
+              {/* Image container */}
+              <motion.div 
+                className="relative rounded-2xl overflow-hidden border-2 border-white bg-white shadow-lg"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Image
+                  src="/1762146670903.jpg"
+                  alt="Sriram - Frontend Developer"
+                  width={380}
+                  height={380}
+                  className="w-64 h-64 sm:w-72 sm:h-72 lg:w-80 lg:h-80 object-cover"
+                  priority
+                />
+                
+                {/* Simple overlay at bottom */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent py-3 px-4">
+                  <p className="text-white text-sm font-medium">
+                    Frontend Developer
+                  </p>
+                </div>
+              </motion.div>
+              
+              {/* Simple decorative elements */}
+              <div className="absolute -z-10 -bottom-6 -right-6 w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-blue-100 blur-xl opacity-70"></div>
+              <div className="absolute -z-10 -top-6 -left-6 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-purple-100 blur-xl opacity-70"></div>
+            </div>
+          </motion.div>
+
+          {/* Text Content - Second on mobile */}
+          <motion.div
+            className="text-center lg:text-left space-y-6 order-2 lg:order-1"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
           >
+            {/* Open to Work Badge - Centered on mobile with extra margin */}
             <motion.div
-              className="inline-flex items-center px-3 py-1.5 bg-blue-100/50 text-blue-700 rounded-full text-sm font-medium mb-2"
+              className="flex justify-center lg:justify-start mb-4"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-              Open to Work
+              <div className="inline-flex items-center px-3 py-1.5 bg-blue-100/50 text-blue-700 rounded-full text-sm font-medium">
+                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                Open to Work
+              </div>
             </motion.div>
             
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">
@@ -307,7 +351,7 @@ const HomePage: React.FC<HomePageProps> = memo(({ scrollToSection, handleDownloa
               <span className="text-gray-700">Frontend Developer</span>
             </h1>
             
-            <p className="text-lg text-gray-600 max-w-xl mx-auto lg:mx-0">
+            <p className="text-base sm:text-lg text-gray-600 max-w-xl mx-auto lg:mx-0">
               A passionate fresher frontend developer specializing in building 
               clean, responsive websites and applications with modern technologies.
             </p>
@@ -330,12 +374,12 @@ const HomePage: React.FC<HomePageProps> = memo(({ scrollToSection, handleDownloa
               {/* Explore My Work button with water bubble effect */}
               <WaterBubbleHover
                 onClick={() => scrollToSection('projects')}
-                className="px-6 py-3 rounded-lg font-medium text-base bg-blue-600 text-white shadow-md"
+                className="w-full sm:w-auto px-6 py-3 rounded-lg font-medium text-base bg-blue-600 text-white shadow-md"
                 bubbleSize={150}
                 bubbleColor="rgba(56, 189, 248, 0.4)"
                 intensity={1.5}
               >
-                <span className="flex items-center gap-2">
+                <span className="flex items-center justify-center gap-2">
                   View My Projects
                   <ArrowRight className="h-4 w-4" />
                 </span>
@@ -343,46 +387,6 @@ const HomePage: React.FC<HomePageProps> = memo(({ scrollToSection, handleDownloa
               
               {/* CV Dropdown with View and Download options */}
               <CVButtons />
-            </div>
-          </motion.div>
-          
-          <motion.div
-            className="relative flex justify-center lg:justify-end"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-          >
-            {/* Simplified image presentation without bubbles */}
-            <div className="relative">
-              {/* Simple gradient background */}
-              <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-500 blur-sm opacity-20"></div>
-              
-              {/* Image container */}
-              <motion.div 
-                className="relative rounded-2xl overflow-hidden border-2 border-white bg-white shadow-lg"
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Image
-                  src="/1762146670903.jpg"
-                  alt="Sriram - Frontend Developer"
-                  width={380}
-                  height={380}
-                  className="w-80 h-80 object-cover"
-                  priority
-                />
-                
-                {/* Simple overlay at bottom */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent py-3 px-4">
-                  <p className="text-white text-sm font-medium">
-                    Frontend Developer
-                  </p>
-                </div>
-              </motion.div>
-              
-              {/* Simple decorative elements */}
-              <div className="absolute -z-10 -bottom-6 -right-6 w-24 h-24 rounded-full bg-blue-100 blur-xl opacity-70"></div>
-              <div className="absolute -z-10 -top-6 -left-6 w-20 h-20 rounded-full bg-purple-100 blur-xl opacity-70"></div>
             </div>
           </motion.div>
         </div>
