@@ -3,6 +3,7 @@
 import React, { memo, useState, useRef } from 'react';
 import Image from 'next/image';
 import { motion, useInView } from 'framer-motion';
+import { fadeUpVariants, containerVariants, staggerItemVariants } from './motion-variants';
 import { FiGithub, FiExternalLink, FiArrowRight, FiPlus, FiMinus } from 'react-icons/fi';
 
 interface Project {
@@ -30,7 +31,7 @@ const projects: Project[] = [
   },
   {
     id: 2,
-    title: 'Moments by Mithul',
+     title: 'Moments by Mithul',
     description:
       'A professional photography portfolio website showcasing stunning photography work with an elegant gallery system, booking functionality, and responsive design for all devices.',
     technologies: ['Next js', 'GSAP', ],
@@ -52,18 +53,7 @@ const ProjectSection: React.FC = () => {
   // Only show the first 2 projects initially
   const visibleProjects = showAll ? projects : projects.slice(0, 2);
 
-  const fadeInVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: (i: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: i * 0.1,
-        duration: 0.8,
-        ease: [0.21, 0.45, 0.46, 1]
-      }
-    })
-  };
+  // Using shared motion variants from ./motion-variants.ts
 
   return (
     <section id="projects" className="py-16 sm:py-24 bg-white" ref={sectionRef}>
@@ -105,7 +95,7 @@ const ProjectSection: React.FC = () => {
             <motion.div
               key={project.id}
               custom={index}
-              variants={fadeInVariants}
+              variants={fadeUpVariants}
               initial="hidden"
               animate={isInView ? "visible" : "hidden"}
               className="relative"
