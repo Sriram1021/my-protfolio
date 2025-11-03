@@ -34,33 +34,13 @@ const projects: Project[] = [
     description:
       'A professional photography portfolio website showcasing stunning photography work with an elegant gallery system, booking functionality, and responsive design for all devices.',
     technologies: ['Next js', 'GSAP', ],
-    image: '/placeholder-project.jpg',
+    image: '/momentsbymithul.jpg',
     github: '#',
     live: '#',
     aiHint: 'photography portfolio',
   },
-  {
-    id: 3,
-    title: 'AI Content Generator',
-    description:
-      'An intelligent content creation tool that leverages machine learning algorithms to generate high-quality, SEO-optimized content for various purposes.',
-    technologies: ['React', 'Python', 'TensorFlow'],
-    image: '/placeholder-project.jpg',
-    github: '#',
-    live: '#',
-    aiHint: 'ai generator',
-  },
-  {
-    id: 4,
-    title: 'Finance Dashboard',
-    description:
-      'A comprehensive financial analytics dashboard with real-time data visualization, expense tracking, and investment portfolio management.',
-    technologies: ['Vue.js', 'D3.js', 'Firebase'],
-    image: '/placeholder-project.jpg',
-    github: '#',
-    live: '#',
-    aiHint: 'finance app',
-  },
+  
+ 
 ];
 
 const ProjectSection: React.FC = () => {

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { memo, useState, useCallback } from 'react';
+import React, { memo, useState, useCallback, useEffect, useRef } from 'react';
+import emailjs from '@emailjs/browser';
 import { 
   Send, 
   Sparkles,
@@ -19,7 +20,9 @@ import {
   Mail,
   MapPin,
   Zap,
-  ArrowLeft
+  ArrowLeft,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 
 interface FormData {
@@ -29,6 +32,11 @@ interface FormData {
   budget: string;
   message: string;
 }
+
+// Update these with your EmailJS credentials
+const EMAILJS_SERVICE_ID = "service_qgyzx4e";
+const EMAILJS_TEMPLATE_ID = "template_doho98l";
+const EMAILJS_PUBLIC_KEY = "-LD4BBKRnQaHnc15X";
 
 const ContactSection: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
@@ -41,22 +49,78 @@ const ContactSection: React.FC = () => {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    // Initialize EmailJS with your user ID
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+  }, []);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   }, []);
 
+  const resetForm = useCallback(() => {
+    setFormData({
+      name: '',
+      email: '',
+      projectType: '',
+      budget: '',
+      message: ''
+    });
+    setCurrentStep(0);
+    setSubmitStatus('idle');
+    setErrorMessage('');
+  }, []);
+
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitStatus('idle');
+    setErrorMessage('');
     
-    setTimeout(() => {
+    try {
+      // Check if at least email is provided
+      if (!formData.email) {
+        throw new Error('Please provide at least your email address so we can get back to you.');
+      }
+      
+      // EmailJS send
+      const result = await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        {
+          from_name: formData.name || 'Website Visitor',
+          reply_to: formData.email,
+          project_type: formData.projectType || 'Not specified',
+          budget: formData.budget || 'Not specified',
+          message: formData.message || 'No message provided',
+        }
+      );
+      
+      console.log('EmailJS success:', result.text);
+      setSubmitStatus('success');
+      
+      // Reset form after success
+      setTimeout(() => {
+        resetForm();
+      }, 3000);
+    } catch (error) {
+      console.error('EmailJS error:', error);
+      setSubmitStatus('error');
+      
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage('Failed to send your message. Please try again later.');
+      }
+    } finally {
       setIsSubmitting(false);
-      setFormData({ name: '', email: '', projectType: '', budget: '', message: '' });
-      setCurrentStep(0);
-    }, 2000);
-  }, []);
+    }
+  }, [formData, resetForm]);
 
   const projectTypes = [
     { value: 'web-dev', label: 'Web Development', icon: <Globe2 className="w-4 h-4" /> },
@@ -119,7 +183,7 @@ const ContactSection: React.FC = () => {
       icon: <Mail className="w-4 h-4" />,
       title: "Email",
       value: "bs0013873@gmail.com",
-      href: "bs0013873@gmail.com",
+      href: "mailto:bs0013873@gmail.com",
       color: "text-purple-600",
       bgColor: "bg-purple-50"
     },
@@ -165,6 +229,36 @@ const ContactSection: React.FC = () => {
           {/* Form Container */}
           <div className="lg:col-span-2">
             <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg p-6 border border-white/50">
+              {/* Success Message */}
+              {submitStatus === 'success' && (
+                <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/90 backdrop-blur-md rounded-2xl border border-white/50">
+                  <div className="text-center p-6 max-w-md">
+                    <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-500">
+                      <CheckCircle className="w-8 h-8" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">Message Sent Successfully!</h3>
+                    <p className="text-slate-600 mb-4">Thank you for reaching out. I'll get back to you as soon as possible.</p>
+                    <button 
+                      onClick={resetForm}
+                      className="px-5 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg transition-colors hover:bg-purple-700"
+                    >
+                      Send Another Message
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Error Message */}
+              {submitStatus === 'error' && (
+                <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Failed to send message</p>
+                    <p className="text-sm mt-1">{errorMessage}</p>
+                  </div>
+                </div>
+              )}
+
               {/* Progress Bar */}
               <div className="relative z-10 mb-6">
                 <div className="h-2 bg-white/70 backdrop-blur-sm rounded-full overflow-hidden border border-slate-200/50">
@@ -203,7 +297,7 @@ const ContactSection: React.FC = () => {
               </div>
 
               {/* Form Content */}
-              <form onSubmit={handleSubmit} className="relative z-10">
+              <form ref={formRef} onSubmit={handleSubmit} className="relative z-10">
                 <div key={currentStep}>
                   <div className="mb-5">
                     <h3 className="text-xl font-semibold mb-1 text-slate-900">{formSteps[currentStep].title}</h3>
@@ -341,6 +435,7 @@ const ContactSection: React.FC = () => {
                           ? 'invisible' 
                           : 'bg-white/70 hover:bg-white/90 text-slate-700 border border-slate-200/50'
                       }`}
+                      disabled={isSubmitting}
                     >
                       <ArrowLeft className="w-3.5 h-3.5" />
                       Previous
@@ -368,7 +463,8 @@ const ContactSection: React.FC = () => {
                       <button
                         type="button"
                         onClick={nextStep}
-                        className="px-6 py-2 cursor-pointer bg-purple-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 shadow-lg hover:bg-purple-700"
+                        disabled={isSubmitting}
+                        className="px-6 py-2 cursor-pointer bg-purple-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 shadow-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Next Step
                         <ChevronRight className="w-3.5 h-3.5" />

@@ -1,9 +1,9 @@
 'use client';
 
-import React, { memo, useRef, useState } from 'react';
+import React, { memo, useRef, useState,useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, FileText, Download, ExternalLink } from 'lucide-react';
 
 // Water Bubble Effect Component (only for buttons)
 interface WaterBubbleProps {
@@ -194,6 +194,81 @@ const TechBadge = ({ label }: { label: string }) => (
   </motion.span>
 );
 
+// CV Button Dropdown Component
+const CVButtons = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      {/* Main CV Button */}
+      <motion.button
+        className="px-6 py-3 rounded-lg font-medium text-base bg-white text-gray-700 border border-gray-300 shadow-sm hover:bg-gray-50 transition-colors flex items-center gap-2"
+        onClick={() => setIsOpen(!isOpen)}
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
+      >
+        <FileText className="w-4 h-4" />
+        <span>Resume</span>
+        <svg 
+          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24" 
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </motion.button>
+      
+      {/* Dropdown Options */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className="absolute mt-2 right-0 w-48 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-20"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <motion.a
+              href="/Sriram Resume 4.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-3 hover:bg-blue-50 transition-colors w-full text-left text-gray-700"
+              whileHover={{ x: 2 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <ExternalLink className="w-4 h-4 text-blue-500" />
+              <span>View CV</span>
+            </motion.a>
+            
+            <motion.a
+              href="/Sriram Resume 4.pdf"
+              download="Sriram_Resume.pdf"
+              className="flex items-center gap-2 px-4 py-3 hover:bg-blue-50 transition-colors w-full text-left border-t border-gray-100 text-gray-700"
+              whileHover={{ x: 2 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Download className="w-4 h-4 text-blue-500" />
+              <span>Download CV</span>
+            </motion.a>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 interface HomePageProps {
   scrollToSection: (section: string) => void;
   handleDownloadCV: () => void;
@@ -266,18 +341,8 @@ const HomePage: React.FC<HomePageProps> = memo(({ scrollToSection, handleDownloa
                 </span>
               </WaterBubbleHover>
               
-              {/* View CV button */}
-<motion.a
-  href="/Sriram Resume 4.pdf" // make sure your PDF is inside /public folder
-  target="_blank"
-  rel="noopener noreferrer"
-  className="px-6 py-3 rounded-lg font-medium text-base bg-white text-gray-700 border border-gray-300 shadow-sm hover:bg-gray-50 transition-colors text-center inline-block"
-  whileHover={{ scale: 1.03 }}
-  whileTap={{ scale: 0.97 }}
->
-  View CV
-</motion.a>
-
+              {/* CV Dropdown with View and Download options */}
+              <CVButtons />
             </div>
           </motion.div>
           
