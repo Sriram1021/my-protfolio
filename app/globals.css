@@ -14,7 +14,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #EAE9F1;
     --foreground: #ededed;
   }
 }
@@ -23,4 +23,65 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+
+
+
+
+@layer utilities {
+  @keyframes orbit-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  @keyframes orbit-slower {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(-360deg); }
+  }
+  
+  @keyframes orbit-very-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  @keyframes counter-orbit-very-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(-360deg); }
+  }
+  
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 var(--pulse-color); }
+    100% { box-shadow: 0 0 0 15px rgba(0,0,0,0); }
+  }
+  
+  @keyframes pulse-slow {
+    0% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.8; }
+  }
+  
+  .animate-orbit-slow {
+    animation: orbit-slow 60s linear infinite;
+  }
+  
+  .animate-orbit-slower {
+    animation: orbit-slower 90s linear infinite;
+  }
+  
+  .animate-orbit-very-slow {
+    animation: orbit-very-slow 200s linear infinite;
+  }
+  
+  .animate-counter-orbit-very-slow {
+    animation: counter-orbit-very-slow 200s linear infinite;
+  }
+  
+  .animate-pulse-ring {
+    animation: pulse-ring 2s infinite;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse-slow 5s infinite;
+  }
 }
