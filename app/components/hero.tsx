@@ -241,7 +241,7 @@ const CVButtons = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.a
-              href="/Sriram Resume 4.pdf"
+              href="/Sriram_Resume.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 px-4 py-3 hover:bg-blue-50 transition-colors w-full text-left text-gray-700"
@@ -253,8 +253,8 @@ const CVButtons = () => {
             </motion.a>
             
             <motion.a
-              href="/Sriram Resume 4.pdf"
-              download="Sriram_Resume.pdf"
+              href="/Sriram_Resume.pdf"
+              download="/Sriram_Resume.pdf"
               className="flex items-center gap-2 px-4 py-3 hover:bg-blue-50 transition-colors w-full text-left border-t border-gray-100 text-gray-700"
               whileHover={{ x: 2 }}
               whileTap={{ scale: 0.98 }}
